@@ -2,3 +2,7 @@ output/
 __pycache__/
 
 .python-version
+
+.vscode/
+
+.env

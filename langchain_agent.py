@@ -16,6 +16,8 @@ from adb_tools import (
     GetDeviceBatteryLevelTool,
     GetDeviceInfoTool,
     SearchDeviceFilesTool,
+    ListInstalledAppsTool,
+    ListRunningProcessesTool,
     get_tool_metadata_from_name,
 )
 
@@ -24,30 +26,27 @@ class MyCustomHandlerOne(BaseCallbackHandler):
     def __init__(self, queue: Queue):
         self.queue = queue
 
-    def on_chain_start(
-        self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
-    ) -> Any:
-        print(f"on_chain_start {serialized}", flush=True)
-
     def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
         """Run on agent action."""
-        print(f"======ACTION========\n{action}\n=================", flush=True)
 
         # Get the metadata for this tool
         metadata = get_tool_metadata_from_name(action.tool)
         self.queue.put_nowait(metadata)
 
 
-def run_agent_executor(input, openai_api_key, queue: Queue):
+def run_agent_executor(input, openai_api_key, model, queue: Queue):
     if not openai_api_key:
         return "Please enter your OpenAI API Key in the sidebar, I can't function without it :("
 
-    llm = ChatOpenAI(temperature=0, model="gpt-4-0613")
+    # Options
+    llm = ChatOpenAI(temperature=0, model=model, api_key=openai_api_key)
     tools = [
         ListDevicesTool(),
         GetDeviceBatteryLevelTool(),
         GetDeviceInfoTool(),
         SearchDeviceFilesTool(),
+        ListInstalledAppsTool(),
+        ListRunningProcessesTool(),
     ]
 
     prompt = ChatPromptTemplate.from_messages(
@@ -59,7 +58,6 @@ def run_agent_executor(input, openai_api_key, queue: Queue):
     )
 
     functions = [format_tool_to_openai_function(t) for t in tools]
-    print(functions)
 
     llm_with_tools = llm.bind(functions=functions)
 

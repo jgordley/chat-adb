@@ -6,7 +6,6 @@ import json
 
 # Default is "127.0.0.1" and 5037
 client = AdbClient(host="127.0.0.1", port=5037)
-print(client.version())
 
 
 def get_device(device_serial):
@@ -100,10 +99,10 @@ def get_device_info(device_serial, output_folder_path):
         for prop in props
     ]
 
-    return props
+    return str(props) + f"Successfully saved to {output_path}."
 
 
-def search_files(device_serial, directory, file_pattern):
+def search_files(device_serial, output_folder_path, directory, file_pattern):
     device = get_device(device_serial)
     if device is None:
         return "Device not found"
@@ -112,7 +111,16 @@ def search_files(device_serial, directory, file_pattern):
     # Remove any patterns of the form: find: './proc/17/task/17/net/stat/nf_conntrack': Permission denied
     results = results.split("\n")
     results = [result for result in results if "Permission denied" not in result]
-    return "\n".join(results)
+    raw_results = "\n".join(results)
+
+    # Write the raw output to a file
+    output_path = (
+        f"{output_folder_path}/SearchFiles-{device_serial}-{str(uuid4())[0:4]}.txt"
+    )
+    with open(output_path, "w") as fp:
+        fp.write(raw_results)
+
+    return raw_results + f"Successfully saved to {output_path}."
 
 
 def capture_screenshot(device_serial, output_folder_path):
@@ -129,14 +137,99 @@ def capture_screenshot(device_serial, output_folder_path):
     return f"Screenshot saved to {output_path}"
 
 
-# def list_installed_apps(device_serial):
-#     device = get_device(device_serial)
-#     if device is None:
-#         return "Device not found"
-#     return device.shell("pm list packages")
+def list_installed_apps(device_serial, output_folder_path):
+    """
+    Output list of installed apps to a file
+
+    Return a consolidated and cleaned list for the chatbot to use
+    """
+
+    device = get_device(device_serial)
+    if device is None:
+        return "Device not found"
+
+    raw_output = device.shell("pm list packages -f")
+
+    # Write the raw output to a file
+    output_path = (
+        f"{output_folder_path}/InstalledApps-{device_serial}-{str(uuid4())[0:4]}.txt"
+    )
+    with open(output_path, "w") as fp:
+        fp.write(raw_output)
+
+    clean_output = device.shell("pm list packages")
+
+    apps = clean_output.replace("package:com.", "").split("\n")
+
+    extra_text = ""
+    app_text = " ".join(apps)
+
+    if len(app_text) > 8000:
+        app_text = app_text[0:8000]
+        extra_text = f"This list is not comprehensive and some were left out."
+
+    return (
+        app_text
+        + extra_text
+        + f"There are {len(apps)} apps installed on this device."
+        + f"Successfully saved to {output_path}."
+    )
 
 
-# def save_report_output(output_path, report_name, report_output):
-#     with open(f"{output_path}/{report_name}", "w") as fp:
-#         fp.write(report_output)
-#     return f"Report saved to {output_path}"
+def get_wifi_networks_connected(device_serial):
+    device = get_device(device_serial)
+    if device is None:
+        return "Device not found"
+
+    # This will also work -> adb shell cat /data/misc/wifi/WifiConfigStore.xml
+    return device.shell("dumpsys wifi | grep -E '^\\s*SSID:'")
+
+
+def get_call_logs(device_serial):
+    device = get_device(device_serial)
+    if device is None:
+        return "Device not found"
+
+    return device.shell("content query --uri content://call_log/calls")
+
+
+def get_running_processes(device_serial, output_folder_path):
+    device = get_device(device_serial)
+    if device is None:
+        return "Device not found"
+
+    raw_output = device.shell("ps -A")
+
+    # Write the raw output to a file
+    output_path = (
+        f"{output_folder_path}/RunningProcesses-{device_serial}-{str(uuid4())[0:4]}.txt"
+    )
+    with open(output_path, "w") as fp:
+        fp.write(raw_output)
+
+    all_lines = raw_output.split("\n")[1:]
+
+    output_lines = []
+    for line in all_lines:
+        cleaned_line = [r for r in line.split(" ") if r]
+        if len(cleaned_line) > 1 and cleaned_line[0] != "root":
+            output_lines.append(f"{cleaned_line[-1]}")
+
+    extra_text = ""
+    final_output = "\n".join(output_lines)
+    if len(final_output) > 500:
+        final_output = final_output[0:500]
+        extra_text = f"This list is not comprehensive and some were left out."
+
+    return final_output + extra_text + f"Successfully saved to {output_path}."
+
+
+def get_device_location(device_serial):
+    device = get_device(device_serial)
+    if device is None:
+        return "Device not found"
+
+    return device.shell("dumpsys location")
+
+
+print(client.version())
