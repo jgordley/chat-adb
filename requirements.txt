@@ -1,0 +1,4 @@
+langchain==0.0.344
+pure_python_adb==0.3.0.dev0
+pydantic==2.5.2
+streamlit==1.28.2
