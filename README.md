@@ -9,7 +9,12 @@ Android Forensics](https://www.dropbox.com/scl/fi/kka39ii05idqw76gnqajz/ADB_Chat
 
 ## Installation
 
-1. Clone this repository locally
+1. Clone this repository locally and install the requirements using pip
+
+```
+➜ pip install -r requirements.txt
+```
+
 2. Install the Android Debug Bridge here: [Android Debug Bridge Download](https://developer.android.com/tools/adb)
     * At the bare minimum you need `/platform_tools` on your computer, here is the direct download page: [Platform Tools](https://developer.android.com/tools/releases/platform-tools)
 
