@@ -50,7 +50,7 @@ def main():
 Welcome to Android Debug Bridge (adb) chat :sunglasses:. I'm here to help you with your Android forensics investigation. You can start by asking for some common actions:
 - What is my current devices battery percentage?
 - Can you give me some basic information about my device?
-- Can you take a screenshot of my devices current screen?
+- Are there any mp4 files on the device?
 """
         st.session_state.messages.append(
             {"role": "assistant", "content": greeting_string}
