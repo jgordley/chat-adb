@@ -230,6 +230,3 @@ def get_device_location(device_serial):
         return "Device not found"
 
     return device.shell("dumpsys location")
-
-
-print(client.version())

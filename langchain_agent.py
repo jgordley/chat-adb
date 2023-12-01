@@ -38,6 +38,8 @@ def run_agent_executor(input, openai_api_key, model, queue: Queue):
     if not openai_api_key:
         return "Please enter your OpenAI API Key in the sidebar, I can't function without it :("
 
+    print(f"Running agent with input query: {input}")
+
     # Options
     llm = ChatOpenAI(temperature=0, model=model, api_key=openai_api_key)
     tools = [
